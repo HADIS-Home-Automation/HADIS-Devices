@@ -9,7 +9,7 @@ Start setup mode by pressing encoder button for approximately 6sec.
 * Rotary Encoder
 * 10k ohm resistor
 
-Full schematic available [here](./assets/DimmableLightSchematic).
+Full schematic available [here](./assets/DimmableLightSchematic.pdf).
 
 ## Pins
 * Mosfet: GPIO 5
@@ -19,18 +19,18 @@ Full schematic available [here](./assets/DimmableLightSchematic).
 
 ## Pictures
 
-<img src="https://github.com/HADIS-Home-Automation/HADIS-Devices/blob/master/HADIS-DimmableLight/assets/DimmableLight-Case.jpg" width="500"/>\
+<img src="https://github.com/HADIS-Home-Automation/HADIS-Devices/blob/master/HADIS-DimmableLight/assets/DimmableLight-Case.jpg" width="500"/>
 
 Finished controller
 
-<img src="https://github.com/HADIS-Home-Automation/HADIS-Devices/blob/master/HADIS-DimmableLight/assets/DimmableLight-Side.jpg" width="500"/>\
+<img src="https://github.com/HADIS-Home-Automation/HADIS-Devices/blob/master/HADIS-DimmableLight/assets/DimmableLight-Side.jpg" width="500"/>
 
 Side of the controller's insides
 
-<img src="https://github.com/HADIS-Home-Automation/HADIS-Devices/blob/master/HADIS-DimmableLight/assets/DimmableLight-Wiring.jpg" width="500"/>\
+<img src="https://github.com/HADIS-Home-Automation/HADIS-Devices/blob/master/HADIS-DimmableLight/assets/DimmableLight-Wiring.jpg" width="500"/>
 
 Controller's wiring on the back side
 
-<img src="https://github.com/HADIS-Home-Automation/HADIS-Devices/blob/master/HADIS-DimmableLight/assets/DimmableLight-Back.jpg" width="500"/>\
+<img src="https://github.com/HADIS-Home-Automation/HADIS-Devices/blob/master/HADIS-DimmableLight/assets/DimmableLight-Back.jpg" width="500"/>
 
 Controller with D1 mini attached
