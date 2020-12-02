@@ -13,7 +13,9 @@ Start setup mode by pressing the button for approximately 6sec.
 ## Pictures
 
 <img src="https://github.com/HADIS-Home-Automation/HADIS-Devices/blob/master/HADIS-WifiSwitch/assets/WifiSwitch-Front.jpg" width="500"/>
+
 Switch with case
 
 <img src="https://github.com/HADIS-Home-Automation/HADIS-Devices/blob/master/HADIS-WifiSwitch/assets/WifiSwitch-Inside.jpg" width="500"/>
+
 Switch without case
