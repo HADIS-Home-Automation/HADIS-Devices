@@ -1,6 +1,6 @@
 # HADIS - Home Automation, Development and Integration System
 
-<img src="https://github.com/HADIS-Home-Automation/HADIS-Devices/assets/logo.png" width="250"/>\
+<img src="https://github.com/HADIS-Home-Automation/HADIS-Devices/blob/master/assets/logo.png" width="250"/>\
 Code for devices of Home Automation, Development and Integration System.
 
 ## Introduction
