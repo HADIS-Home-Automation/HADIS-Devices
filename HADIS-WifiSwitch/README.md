@@ -9,6 +9,7 @@ Start setup mode by pressing the button for approximately 6sec.
 ## Pins
 * Button: GPIO 0
 * Relay: GPIO 12
+* Indicator LED: GPIO 13
 
 ## Pictures
 

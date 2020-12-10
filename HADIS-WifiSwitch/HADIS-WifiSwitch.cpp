@@ -40,7 +40,6 @@ void generateTopics();
 // ------------------------------------------------------------------
 // PINS    PINS    PINS    PINS    PINS    PINS    PINS    PINS
 // ------------------------------------------------------------------
-// TODO change pins
 // used pins of microcontroller definitions
 const int pinButton = 0;
 const int RELAY = 12;
