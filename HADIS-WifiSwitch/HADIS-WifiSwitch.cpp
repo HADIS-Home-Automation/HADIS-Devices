@@ -13,7 +13,7 @@
 // ------------------------------------------------------------------
 
 // remove comment for debugging
-// #define DEBUG
+#define DEBUG
 
 // serial interface enabled if DEBUG is active
 #ifdef DEBUG
@@ -43,9 +43,8 @@ void generateTopics();
 // TODO change pins
 // used pins of microcontroller definitions
 const int pinButton = 0;
-const int LED_green = 12;
-const int LED_red = 13;
-
+const int RELAY = 12;
+const int LED_green = 13; //only used for AP indicator
 
 
 // ------------------------------------------------------------------
@@ -128,9 +127,7 @@ ICACHE_RAM_ATTR void isrButton() {
 
         // toggle relay state
         relayState = !relayState;
-
-        // set device indicator LED show to relay state
-        digitalWrite(LED_red, relayState);
+        digitalWrite(RELAY, relayState);
 
         // on button press start the timer for long press
         buttonPressedTime = millis();
@@ -591,9 +588,7 @@ void callback(char *topic, const byte *payload, unsigned int length) {
 
             // set received relay state
             relayState = payload[0] - '0';
-
-            // set device indicator LED show to relay state
-            digitalWrite(LED_red, relayState);
+            digitalWrite(RELAY, relayState);
 
             // sets flag to not resend received value to MQTT
             mqttTrigger = TRUE;
@@ -624,7 +619,7 @@ void setup() {
     SERIAL_BEGIN(9600);
 
     // setup pin modes
-    pinMode(LED_red, OUTPUT);
+    pinMode(RELAY, OUTPUT);
     pinMode(LED_green, OUTPUT);
     pinMode(pinButton, INPUT_PULLUP);
 
