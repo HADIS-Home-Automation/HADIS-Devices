@@ -1,7 +1,7 @@
 # HADIS - Home Automation, Development and Integration System
 
 <img src="https://github.com/HADIS-Home-Automation/HADIS-Devices/blob/master/assets/logo.png" width="250"/>\
-Code for devices of Home Automation, Development and Integration System.
+Collection of code for devices of Home Automation, Development and Integration System.
 
 ## Introduction
 
@@ -24,4 +24,4 @@ Code for controlling HADIS devices is available in [HADIS-Frontend repository](h
 
 ## License
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
