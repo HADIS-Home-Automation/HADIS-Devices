@@ -17,6 +17,14 @@ Full schematic available [here](./assets/DimmerSchematic.pdf).
 * Encoder S2: GPIO 14
 * Encoder button: GPIO 13
 
+## MQTT topic
+* HADIS/*deviceName*/LIGHT -> handle brightness level
+* HADIS/*deviceName*/LIGHT-TOGGLE -> handle set brightness on toggle
+* HADIS/*deviceName*/DOUBLE-CLICK -> ping topic for responding on double click
+* HADIS/*deviceName*/SETUP -> handle setup mode activation
+* HADIS/*deviceName*/STATUS -> handle device status (ONLINE/OFFLINE)
+*deviceName* is a placeholder for specific topics
+
 ## Pictures
 
 ![Dimmer case](./assets/Thumb/Dimmer-Case.jpg)

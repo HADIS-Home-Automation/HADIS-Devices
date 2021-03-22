@@ -42,9 +42,9 @@ void generateTopics();
 // ------------------------------------------------------------------
 
 // used pins of micro controller definitions
-const int RotarySignal1 = D5;
-const int RotarySignal2 = D6;
-const int pinButton = D2;
+const int RotarySignal1 = D6;
+const int RotarySignal2 = D5;
+const int pinButton = D7;
 const int LED = D1;
 
 
@@ -60,10 +60,13 @@ volatile int lastToggleBrightnessMemory = 1023;
 const int fadeAmount = 32;
 volatile int encoderTrigger = FALSE;
 
-// long press variables
+// button press variables
 #define RESET 0
 const int LONG_PRESS_LENGTH = 5000;
-unsigned long buttonPressedTime = RESET;
+volatile unsigned long buttonPressedTime = RESET;
+const int DOUBLE_PRESS_INTERVAL = 500;
+volatile unsigned long doubleClickTime = RESET;
+volatile int doubleClick = FALSE;
 
 // AP hosting variables
 char macAddress[18];
@@ -75,6 +78,7 @@ unsigned long inputReceivedTime = RESET;
 // MQTT variables
 char topicLight[90];
 char topicLightToggle[90];
+char topicDoubleClick[90];
 char topicSetup[90];
 char topicStatus[90];
 char msg[50];
@@ -172,20 +176,28 @@ ICACHE_RAM_ATTR void isrButton() {
     if (interruptTime - lastInterruptTime > 200) {
         lastInterruptTime = interruptTime;
 
-        // toggle between 0 & last used brightness
-        if (brightness == 0) {
-            brightness = toggleBrightnessMemory;
-        } else {
-            toggleBrightnessMemory = brightness;
-            brightness = 0;
+        // check if clicked before
+        if(doubleClickTime){
+            doubleClick = TRUE;
         }
-        analogWrite(LED, brightness);
+        else {
 
-        // on button press start the timer for long press
-        buttonPressedTime = millis();
+            // toggle between 0 & last used brightness
+            if (brightness == 0) {
+                brightness = toggleBrightnessMemory;
+            } else {
+                toggleBrightnessMemory = brightness;
+                brightness = 0;
+            }
+            analogWrite(LED, brightness);
 
-        // boolean for preventing feedback loop on topic
-        encoderTrigger = TRUE;
+            // on button press start the timer for long & double press
+            buttonPressedTime = millis();
+            doubleClickTime = millis();
+
+            // boolean for preventing feedback loop on topic
+            encoderTrigger = TRUE;
+        }
     }
 }
 
@@ -312,6 +324,7 @@ void handleInput() {
     server.arg("DeviceName").toCharArray(inputDeviceName, 21);
 
     PRINTLN(inputDeviceName);
+
     // generate status topic (required for connecting to broker with LWT)
     strcpy(topicStatus, "HADIS/");
     strcat(topicStatus, inputDeviceName);
@@ -355,10 +368,13 @@ void hostAP() {
     //reset long press counter if button clicked while hosting AP
     buttonPressedTime = RESET;
 
+    //reset double press counter if button clicked while hosting AP
+    doubleClick = FALSE;
+    doubleClickTime = RESET;
+
     // shut down AP mode
     server.close();
     WiFi.softAPdisconnect(true);
-
 
     // configure back to wifi mode & configure MQTT server with new input settings
     WiFi.mode(WIFI_STA);
@@ -502,9 +518,47 @@ void longPressPoll() {
             buttonPressedTime = RESET;
             longPress();
         }
-            // stop the count if button is not pressed anymore
+        // stop the count if button is not pressed anymore
         else if (digitalRead(pinButton)) {
             buttonPressedTime = RESET;
+        }
+    }
+}
+
+// ------------------------------------------------------------------
+// DOUBLE PRESS    DOUBLE PRESS    DOUBLE PRESS    DOUBLE PRESS
+// ------------------------------------------------------------------
+
+// function for double press of device button
+void doublePress() {
+    PRINTLN("double press");
+
+    // publish message for double press handling
+    pubSubClient.publish(topicDoubleClick, "1", FALSE);
+}
+
+// double press polling code
+// code runs every main loop cycle
+void doublePressPoll() {
+
+    // check if button was pressed
+    if(doubleClickTime > 0) {
+
+        // reset double press variables after DOUBLE_PRESS_INTERVAL
+        if (millis() - doubleClickTime >= DOUBLE_PRESS_INTERVAL) {
+
+            doubleClick = FALSE;
+            doubleClickTime = RESET;
+        }
+        // check if button was pressed twice
+        else if (doubleClick) {
+
+            // reset double press variables
+            doubleClick = FALSE;
+            doubleClickTime = RESET;
+
+            // start double press function
+            doublePress();
         }
     }
 }
@@ -550,6 +604,7 @@ void transitionSmoothly() {
 // generate MQTT topic strings
 // HADIS/*deviceName*/LIGHT -> handle brightness level
 // HADIS/*deviceName*/LIGHT-TOGGLE -> handle set brightness on toggle
+// HADIS/*deviceName*/DOUBLE-CLICK -> ping topic for responding on double click
 // HADIS/*deviceName*/SETUP -> handle setup mode activation
 // HADIS/*deviceName*/STATUS -> handle device status (ONLINE/OFFLINE)
 // *deviceName* is a placeholder for specific topics
@@ -562,14 +617,17 @@ void generateTopics() {
     // build topic suffix
     strcpy(topicLight, topicSetup);
     strcpy(topicLightToggle, topicSetup);
+    strcpy(topicDoubleClick, topicSetup);
     strcpy(topicStatus, topicSetup);
     strcat(topicSetup, "/SETUP");
     strcat(topicLight, "/LIGHT");
     strcat(topicLightToggle, "/LIGHT-TOGGLE");
+    strcat(topicDoubleClick, "/DOUBLE-CLICK");
     strcat(topicStatus, "/STATUS");
 
     PRINTLN(topicLight);
     PRINTLN(topicLightToggle);
+    PRINTLN(topicDoubleClick);
     PRINTLN(topicSetup);
     PRINTLN(topicStatus);
 }
@@ -777,6 +835,9 @@ void loop() {
     } else {
         pubSubClient.loop();
     }
+
+    // poll for double press
+    doublePressPoll();
 
     // poll for long press
     longPressPoll();
