@@ -55,10 +55,13 @@ volatile int relayState = 0;
 volatile int lastRelayState = 0;
 volatile int hardwareTrigger = FALSE;
 
-// long press variables
+// button press variables
 #define RESET 0
 const int LONG_PRESS_LENGTH = 5000;
 unsigned long buttonPressedTime = RESET;
+const int DOUBLE_PRESS_INTERVAL = 500;
+volatile unsigned long doubleClickTime = RESET;
+volatile int doubleClick = FALSE;
 
 // AP hosting variables
 char macAddress[18];
@@ -69,6 +72,7 @@ unsigned long inputReceivedTime = RESET;
 
 // MQTT variables
 char topicSwitch[90];
+char topicDoubleClick[90];
 char topicSetup[90];
 char topicStatus[90];
 char msg[50];
@@ -112,7 +116,7 @@ byte inputMqtt[4];
 // BUTTON INTERRUPT    BUTTON INTERRUPT    BUTTON INTERRUPT
 // ------------------------------------------------------------------
 
-// ISR routine for device button press (on Rotary encoder)
+// ISR routine for device button press (on Touch switch encoder)
 ICACHE_RAM_ATTR void isrButton() {
     static unsigned long lastInterruptTime = 0;
     unsigned long interruptTime = millis();
@@ -121,18 +125,26 @@ ICACHE_RAM_ATTR void isrButton() {
     if (interruptTime - lastInterruptTime > 200) {
         lastInterruptTime = interruptTime;
 
-        // remember current relay state
-        lastRelayState = relayState;
+        // check if clicked before
+        if(doubleClickTime){
+            doubleClick = TRUE;
+        }
+        else {
 
-        // toggle relay state
-        relayState = !relayState;
-        digitalWrite(RELAY, relayState);
-
-        // on button press start the timer for long press
-        buttonPressedTime = millis();
-
-        // boolean for preventing feedback loop on topic
-        hardwareTrigger = TRUE;
+            // remember current relay state
+            lastRelayState = relayState;
+    
+            // toggle relay state
+            relayState = !relayState;
+            digitalWrite(RELAY, relayState);
+    
+            // on button press start the timer for long & double press
+            buttonPressedTime = millis();
+            doubleClickTime = millis();
+    
+            // boolean for preventing feedback loop on topic
+            hardwareTrigger = TRUE;
+        }
     }
 }
 
@@ -303,6 +315,10 @@ void hostAP() {
     //reset long press counter if button clicked while hosting AP
     buttonPressedTime = RESET;
 
+    //reset double press counter if button clicked while hosting AP
+    doubleClick = FALSE;
+    doubleClickTime = RESET;
+
     // shut down AP mode
     server.close();
     WiFi.softAPdisconnect(true);
@@ -456,6 +472,44 @@ void longPressPoll() {
     }
 }
 
+// ------------------------------------------------------------------
+// DOUBLE PRESS    DOUBLE PRESS    DOUBLE PRESS    DOUBLE PRESS
+// ------------------------------------------------------------------
+
+// function for double press of device button
+void doublePress() {
+    PRINTLN("double press");
+
+    // publish message for double press handling
+    pubSubClient.publish(topicDoubleClick, "1", FALSE);
+}
+
+// double press polling code
+// code runs every main loop cycle
+void doublePressPoll() {
+
+    // check if button was pressed
+    if(doubleClickTime > 0) {
+
+        // reset double press variables after DOUBLE_PRESS_INTERVAL
+        if (millis() - doubleClickTime >= DOUBLE_PRESS_INTERVAL) {
+
+            doubleClick = FALSE;
+            doubleClickTime = RESET;
+        }
+        // check if button was pressed twice
+        else if (doubleClick) {
+
+            // reset double press variables
+            doubleClick = FALSE;
+            doubleClickTime = RESET;
+
+            // start double press function
+            doublePress();
+        }
+    }
+}
+
 
 // ------------------------------------------------------------------
 // GENERATE TOPIC    GENERATE TOPIC    GENERATE TOPIC
@@ -463,6 +517,7 @@ void longPressPoll() {
 
 // generate MQTT topic strings
 // HADIS/*deviceName*/SWITCH -> handle relay state
+// HADIS/*deviceName*/DOUBLE-CLICK -> ping topic for responding on double click
 // HADIS/*deviceName*/SETUP -> handle setup mode activation
 // HADIS/*deviceName*/STATUS -> handle device status (ONLINE/OFFLINE)
 // *deviceName* is a placeholder for specific topics
@@ -474,12 +529,15 @@ void generateTopics() {
 
     // build topic suffix
     strcpy(topicSwitch, topicSetup);
+    strcpy(topicDoubleClick, topicSetup);
     strcpy(topicStatus, topicSetup);
     strcat(topicSetup, "/SETUP");
     strcat(topicSwitch, "/SWITCH");
+    strcat(topicDoubleClick, "/DOUBLE-CLICK");
     strcat(topicStatus, "/STATUS");
 
     PRINTLN(topicSwitch);
+    PRINTLN(topicDoubleClick);
     PRINTLN(topicSetup);
     PRINTLN(topicStatus);
 }
@@ -662,6 +720,9 @@ void loop() {
     } else {
         pubSubClient.loop();
     }
+
+    // poll for double press
+    doublePressPoll();
 
     // poll for long press
     longPressPoll();
